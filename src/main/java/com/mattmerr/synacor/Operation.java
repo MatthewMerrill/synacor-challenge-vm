@@ -11,8 +11,8 @@ public enum Operation {
   EQ(),                           //  4
   GT(),                           //  5
   JMP(VirtualMachine::jmp),       //  6
-  JT(),                           //  7
-  JF(),                           //  8
+  JT(VirtualMachine::jt),         //  7
+  JF(VirtualMachine::jf),         //  8
   ADD(),                          //  9
   MULT(),                         // 10
   MOD(),                          // 11

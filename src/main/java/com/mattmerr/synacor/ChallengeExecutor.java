@@ -1,6 +1,8 @@
 package com.mattmerr.synacor;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -14,7 +16,7 @@ public class ChallengeExecutor {
 
     byte[] program = Files.readAllBytes(Paths.get(args[0]));
     var vm = new VirtualMachine();
-    vm.program = program;
+    vm.program = ByteBuffer.wrap(program);
     vm.execute();
   }
 

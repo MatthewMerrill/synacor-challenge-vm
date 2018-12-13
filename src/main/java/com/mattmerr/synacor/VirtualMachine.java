@@ -3,6 +3,8 @@ package com.mattmerr.synacor;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 @SuppressWarnings("WeakerAccess")
 public class VirtualMachine {
@@ -14,7 +16,7 @@ public class VirtualMachine {
   private final char[] registers = new char[8];
   private final Stack stack = new Stack();
 
-  byte[] program = new byte[0];
+  ByteBuffer program = null;
   private int pc = -1;
 
   public static void main(String[] args) {
@@ -40,8 +42,12 @@ public class VirtualMachine {
 
   public void execute() {
     pc = 0;
+    program.order(ByteOrder.LITTLE_ENDIAN);
     while (pc >= 0) {
       var op = decodeOperation();
+      if (op != Operation.OUT) {
+        int a = 0; // watchpoint
+      }
       op.exec(this);
     }
   }
@@ -51,12 +57,11 @@ public class VirtualMachine {
     return opcodes[readMemRaw()];
   }
   private final char readMemRaw() {
-    if (pc + 1 >= program.length) {
+    if (pc + 1 >= program.limit()) {
       throw new IndexOutOfBoundsException("pc too big");
     }
-    byte lo = program[pc++];
-    byte hi = program[pc++];
-    char val = (char) ((hi << 8) | (lo));
+    char val = program.getChar(pc);
+    pc += 2;
     return val;
   }
   private final char readMemVal() {
@@ -68,7 +73,7 @@ public class VirtualMachine {
       return registers[val - 32768];
     }
     else {
-      throw new AssertionError("Invalid MemVal: " + val);
+      throw new AssertionError("Invalid MemVal: " + (int) val);
     }
   }
 
@@ -83,7 +88,25 @@ public class VirtualMachine {
 
   //  6: JMP
   public void jmp() {
-    pc = (char) (2 * readMemVal());
+    pc = 2 * (int) ((char) readMemVal());
+  }
+
+  //  7: JT
+  public void jt() {
+    char a = readMemVal();
+    char b = readMemVal();
+    if (a != 0) {
+      pc = 2 * (int) b;
+    }
+  }
+
+  //  8: JF
+  public void jf() {
+    char a = readMemVal();
+    char b = readMemVal();
+    if (a == 0) {
+      pc = 2 * (int) b;
+    }
   }
 
   // 19: OUT
