@@ -76,6 +76,9 @@ public class VirtualMachine {
       throw new AssertionError("Invalid MemVal: " + (int) val);
     }
   }
+  private final char readRegister() {
+    return (char) (((int) readMemRaw()) % 32768);
+  }
 
   ////////////////
   // OPERATIONS //
@@ -84,6 +87,21 @@ public class VirtualMachine {
   //  0: HALT
   public void halt() {
     pc = -1;
+  }
+
+  //   1: SET
+  public void set() {
+    char a = readRegister();
+    char b = readMemVal();
+    registers[a] = b;
+  }
+
+  //   9: EQ
+  public void eq() {
+    char a = readRegister();
+    char b = readMemVal();
+    char c = readMemVal();
+    registers[a] = (char) ((b == c) ? 1 : 0);
   }
 
   //  6: JMP
@@ -107,6 +125,14 @@ public class VirtualMachine {
     if (a == 0) {
       pc = 2 * (int) b;
     }
+  }
+
+  //   9: ADD
+  public void add() {
+    char a = readRegister();
+    char b = readMemVal();
+    char c = readMemVal();
+    registers[a] = (char)((b + c) % 32768);
   }
 
   // 19: OUT

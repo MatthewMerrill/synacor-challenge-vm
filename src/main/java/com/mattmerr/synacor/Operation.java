@@ -5,15 +5,15 @@ import java.util.function.Consumer;
 public enum Operation {
 
   HALT(VirtualMachine::halt),     //  0
-  SET(),                          //  1
+  SET(VirtualMachine::set),       //  1
   PUSH(),                         //  2
   POP(),                          //  3
-  EQ(),                           //  4
+  EQ(VirtualMachine::eq),         //  4
   GT(),                           //  5
   JMP(VirtualMachine::jmp),       //  6
   JT(VirtualMachine::jt),         //  7
   JF(VirtualMachine::jf),         //  8
-  ADD(),                          //  9
+  ADD(VirtualMachine::add),       //  9
   MULT(),                         // 10
   MOD(),                          // 11
   AND(),                          // 12
