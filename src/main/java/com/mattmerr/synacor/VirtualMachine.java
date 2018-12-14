@@ -96,12 +96,32 @@ public class VirtualMachine {
     registers[a] = b;
   }
 
-  //   9: EQ
+  //   2: PUSH
+  public void push() {
+    char a = readMemVal();
+    stack.push(a);
+  }
+
+  //   3: POP
+  public void pop() {
+    char a = readRegister();
+    registers[a] = stack.pop();
+  }
+
+  //   4: EQ
   public void eq() {
     char a = readRegister();
     char b = readMemVal();
     char c = readMemVal();
     registers[a] = (char) ((b == c) ? 1 : 0);
+  }
+
+  //   5: GT
+  public void gt() {
+    char a = readRegister();
+    char b = readMemVal();
+    char c = readMemVal();
+    registers[a] = (char) ((b > c) ? 1 : 0);
   }
 
   //  6: JMP
@@ -133,6 +153,29 @@ public class VirtualMachine {
     char b = readMemVal();
     char c = readMemVal();
     registers[a] = (char)((b + c) % 32768);
+  }
+
+  //  12: AND
+  public void and() {
+    char a = readRegister();
+    char b = readMemVal();
+    char c = readMemVal();
+    registers[a] = (char)((b & c) % 32768);
+  }
+
+  //  13: OR
+  public void or() {
+    char a = readRegister();
+    char b = readMemVal();
+    char c = readMemVal();
+    registers[a] = (char)((b | c) % 32768);
+  }
+
+  //  14: NOT
+  public void not() {
+    char a = readRegister();
+    char b = readMemVal();
+    registers[a] = (char)(b ^ 0x7FFF);
   }
 
   // 19: OUT
