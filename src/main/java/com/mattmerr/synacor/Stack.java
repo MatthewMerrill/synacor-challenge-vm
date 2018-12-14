@@ -12,13 +12,19 @@
       }
       return stack.get(stack.size() - 1);
     }
+
     public char pop() {
       if (stack.isEmpty()) {
         throw new NoSuchElementException();
       }
       return stack.remove(stack.size() - 1);
     }
+
     public void push(char v) {
       stack.add(v);
+    }
+
+    public boolean isEmpty() {
+      return stack.isEmpty();
     }
   }

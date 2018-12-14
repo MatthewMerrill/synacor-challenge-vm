@@ -14,15 +14,15 @@ public enum Operation {
   JT(VirtualMachine::jt),         //  7
   JF(VirtualMachine::jf),         //  8
   ADD(VirtualMachine::add),       //  9
-  MULT(),                         // 10
-  MOD(),                          // 11
+  MULT(VirtualMachine::mult),     // 10
+  MOD(VirtualMachine::mod),       // 11
   AND(VirtualMachine::and),       // 12
-  OR(VirtualMachine::or),                           // 13
-  NOT(VirtualMachine::not),                          // 14
+  OR(VirtualMachine::or),         // 13
+  NOT(VirtualMachine::not),       // 14
   RMEM(),                         // 15
   WMEM(),                         // 16
-  CALL(),                         // 17
-  RET(),                          // 18
+  CALL(VirtualMachine::call),     // 17
+  RET(VirtualMachine::ret),       // 18
   OUT(VirtualMachine::out),       // 19
   IN(),                           // 20
   NOP(VirtualMachine::nop),       // 21

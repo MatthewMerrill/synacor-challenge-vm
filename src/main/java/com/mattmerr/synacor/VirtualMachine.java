@@ -147,7 +147,7 @@ public class VirtualMachine {
     }
   }
 
-  //   9: ADD
+  //  9: ADD
   public void add() {
     char a = readRegister();
     char b = readMemVal();
@@ -155,7 +155,23 @@ public class VirtualMachine {
     registers[a] = (char)((b + c) % 32768);
   }
 
-  //  12: AND
+  // 10: MULT
+  public void mult() {
+    char a = readRegister();
+    int b = readMemVal();
+    int c = readMemVal();
+    registers[a] = (char)((b * c) % 32768);
+  }
+
+  // 11: MOD
+  public void mod() {
+    char a = readRegister();
+    char b = readMemVal();
+    char c = readMemVal();
+    registers[a] = (char)((b % c) % 32768);
+  }
+
+  // 12: AND
   public void and() {
     char a = readRegister();
     char b = readMemVal();
@@ -163,7 +179,7 @@ public class VirtualMachine {
     registers[a] = (char)((b & c) % 32768);
   }
 
-  //  13: OR
+  // 13: OR
   public void or() {
     char a = readRegister();
     char b = readMemVal();
@@ -171,11 +187,26 @@ public class VirtualMachine {
     registers[a] = (char)((b | c) % 32768);
   }
 
-  //  14: NOT
+  // 14: NOT
   public void not() {
     char a = readRegister();
     char b = readMemVal();
     registers[a] = (char)(b ^ 0x7FFF);
+  }
+
+  // 17: CALL
+  public void call() {
+    char a = readMemVal();
+    stack.push((char) (pc / 2));
+    pc = 2 * (int) a;
+  }
+
+  // 18: RET
+  public void ret() {
+    if (stack.isEmpty()) {
+      halt();
+    }
+    pc = 2 * stack.pop();
   }
 
   // 19: OUT
