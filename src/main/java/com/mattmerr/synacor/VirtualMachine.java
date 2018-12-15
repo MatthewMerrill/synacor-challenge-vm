@@ -1,5 +1,6 @@
 package com.mattmerr.synacor;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -13,11 +14,12 @@ public class VirtualMachine {
   private final LogPrependerStream logPrepender;
   private final PrintStream logger;
 
-  private final char[] registers = new char[8];
-  private final Stack stack = new Stack();
+  public boolean denoteInput = false;
 
+  final char[] reg = new char[8];
+  final Stack stack = new Stack();
   ByteBuffer program = null;
-  private int pc = -1;
+  int pc = -1;
 
   public static void main(String[] args) {
     var vm = new VirtualMachine();
@@ -70,7 +72,7 @@ public class VirtualMachine {
       return val;
     }
     else if (32768 <= val && val <= 32775) {
-      return registers[val - 32768];
+      return reg[val - 32768];
     }
     else {
       throw new AssertionError("Invalid MemVal: " + (int) val);
@@ -93,19 +95,28 @@ public class VirtualMachine {
   public void set() {
     char a = readRegister();
     char b = readMemVal();
-    registers[a] = b;
+    set(a, b);
+  }
+  public void set(char a, char b) {
+    reg[a] = b;
   }
 
   //   2: PUSH
   public void push() {
     char a = readMemVal();
+    push(a);
+  }
+  public void push(char a) {
     stack.push(a);
   }
 
   //   3: POP
   public void pop() {
     char a = readRegister();
-    registers[a] = stack.pop();
+    pop(a);
+  }
+  public void pop(char a) {
+    reg[a] = stack.pop();
   }
 
   //   4: EQ
@@ -113,7 +124,10 @@ public class VirtualMachine {
     char a = readRegister();
     char b = readMemVal();
     char c = readMemVal();
-    registers[a] = (char) ((b == c) ? 1 : 0);
+    eq(a, b, c);
+  }
+  public void eq(char a, char b, char c) {
+    reg[a] = (char) ((b == c) ? 1 : 0);
   }
 
   //   5: GT
@@ -121,18 +135,28 @@ public class VirtualMachine {
     char a = readRegister();
     char b = readMemVal();
     char c = readMemVal();
-    registers[a] = (char) ((b > c) ? 1 : 0);
+    gt(a, b, c);
+  }
+  public void gt(char a, char b, char c) {
+    reg[a] = (char) ((b > c) ? 1 : 0);
   }
 
   //  6: JMP
   public void jmp() {
-    pc = 2 * (int) ((char) readMemVal());
+    char a = readMemVal();
+    jmp(a);
+  }
+  public void jmp(char a) {
+    pc = 2*(int) (a);
   }
 
   //  7: JT
   public void jt() {
     char a = readMemVal();
     char b = readMemVal();
+    jt(a, b);
+  }
+  public void jt(char a, char b) {
     if (a != 0) {
       pc = 2 * (int) b;
     }
@@ -142,6 +166,9 @@ public class VirtualMachine {
   public void jf() {
     char a = readMemVal();
     char b = readMemVal();
+    jf(a, b);
+  }
+  public void jf(char a, char b) {
     if (a == 0) {
       pc = 2 * (int) b;
     }
@@ -152,7 +179,10 @@ public class VirtualMachine {
     char a = readRegister();
     char b = readMemVal();
     char c = readMemVal();
-    registers[a] = (char)((b + c) % 32768);
+    add(a, b, c);
+  }
+  public void add(char a, char b, char c) {
+    reg[a] = (char)((b + c) % 32768);
   }
 
   // 10: MULT
@@ -160,7 +190,10 @@ public class VirtualMachine {
     char a = readRegister();
     int b = readMemVal();
     int c = readMemVal();
-    registers[a] = (char)((b * c) % 32768);
+    mult(a, b, c);
+  }
+  public void mult(char a, int b, int c) {
+    reg[a] = (char)((b * c) % 32768);
   }
 
   // 11: MOD
@@ -168,7 +201,10 @@ public class VirtualMachine {
     char a = readRegister();
     char b = readMemVal();
     char c = readMemVal();
-    registers[a] = (char)((b % c) % 32768);
+    mod(a, b, c);
+  }
+  public void mod(char a, char b, char c) {
+    reg[a] = (char) ((b%c)%32768);
   }
 
   // 12: AND
@@ -176,7 +212,10 @@ public class VirtualMachine {
     char a = readRegister();
     char b = readMemVal();
     char c = readMemVal();
-    registers[a] = (char)((b & c) % 32768);
+    and(a, b, c);
+  }
+  public void and(char a, char b, char c) {
+    reg[a] = (char) ((b & c)%32768);
   }
 
   // 13: OR
@@ -184,19 +223,48 @@ public class VirtualMachine {
     char a = readRegister();
     char b = readMemVal();
     char c = readMemVal();
-    registers[a] = (char)((b | c) % 32768);
+    or(a, b, c);
+  }
+  public void or(char a, char b, char c) {
+    reg[a] = (char)((b | c) % 32768);
   }
 
   // 14: NOT
   public void not() {
     char a = readRegister();
     char b = readMemVal();
-    registers[a] = (char)(b ^ 0x7FFF);
+    not(a, b);
+  }
+  public void not(char a, char b) {
+    reg[a] = (char)(b ^ 0x7FFF);
+  }
+
+  // 15: RMEM
+  public void rmem() {
+    char a = readRegister();
+    char b = readMemVal();
+    rmem(a, b);
+  }
+  public void rmem(char a, char b) {
+    reg[a] = program.getChar(2 * b);
+  }
+
+  // 15: WMEM
+  public void wmem() {
+    char a = readMemVal();
+    char b = readMemVal();
+    wmem(a, b);
+  }
+  public void wmem(char a, char b) {
+    program.putChar(2 * a, b);
   }
 
   // 17: CALL
   public void call() {
     char a = readMemVal();
+    call(a);
+  }
+  public void call(char a) {
     stack.push((char) (pc / 2));
     pc = 2 * (int) a;
   }
@@ -212,9 +280,37 @@ public class VirtualMachine {
   // 19: OUT
   public void out() {
     char a = readMemVal();
-    logger.print((char) a);
+    out(a);
+  }
+  public void out(char a) {
+    logger.print(a);
   }
 
+  // 20: IN
+  public void in() {
+    char a = readRegister();
+    in(a);
+  }
+  public void in(char a) {
+    try {
+//      if (denoteInput) {
+//        logger.print('§');
+//        logger.flush();
+//      }
+      int read = inputStream.read();
+      if (read == -1) {
+        throw new IOException("reached end of input");
+      }
+      System.err.write(read);
+      reg[a] = (char) read;
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+      halt();
+    }
+  }
+
+  // 21: NOP
   public void nop() {
   }
 
